@@ -60,15 +60,15 @@ export function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, se
         {/* Collapse Toggle - Desktop Only */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex absolute -right-3 top-12 w-6 h-6 bg-white dark:bg-[#16161a] border border-zinc-200 dark:border-white/[0.1] items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 z-10"
+          className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 rounded-full bg-white dark:bg-[#16161a] border border-zinc-200 dark:border-white/[0.1] shadow-sm items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:scale-105 transition-all duration-300 z-10"
         >
-          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
-      <div className="flex-1 px-4 space-y-10 overflow-y-auto py-8 custom-scrollbar overflow-x-hidden">
-        <nav className="space-y-1.5">
-          {!isCollapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-6 opacity-80">General</p>}
+      <div className="flex-1 px-4 space-y-8 overflow-y-auto py-6 custom-scrollbar overflow-x-hidden">
+        <nav className="space-y-1">
+          {!isCollapsed && <p className="px-4 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-4 opacity-90">General</p>}
           {navItems.map((item, i) => {
             const isActive = location.pathname === item.path && (item.path !== '/' || location.pathname === '/');
             return (
@@ -76,28 +76,28 @@ export function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, se
                 key={i}
                 onClick={() => navigate(item.path)}
                 title={isCollapsed ? item.label : ''}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-none text-xs font-bold uppercase tracking-widest transition-all duration-300 group ${isActive ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black border border-zinc-900 dark:border-transparent' : 'text-zinc-500 border border-transparent hover:border-zinc-200 dark:hover:border-white/[0.1] hover:bg-zinc-50 dark:hover:bg-white/[0.04] hover:text-zinc-900 dark:hover:text-zinc-100 active:scale-[0.98]'} ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 group ${isActive ? 'bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:bg-zinc-50 dark:hover:bg-white/[0.04] hover:text-zinc-900 dark:hover:text-zinc-100 active:scale-[0.98]'} ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
               >
-                <item.icon className={`w-4 h-4 transition-all duration-300 shrink-0 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:rotate-6'}`} />
+                <item.icon className={`w-4 h-4 transition-all duration-300 shrink-0 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {!isCollapsed && <span className="transition-all duration-500 whitespace-nowrap">{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <nav className="space-y-1.5">
-          {!isCollapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-6 opacity-80">Support</p>}
+        <nav className="space-y-1">
+          {!isCollapsed && <p className="px-4 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-4 opacity-90">Support</p>}
           <button
             title={isCollapsed ? 'Help Center' : ''}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-none text-xs font-bold uppercase tracking-widest text-zinc-500 border border-transparent hover:border-zinc-200 dark:hover:border-white/[0.1] hover:bg-zinc-50 dark:hover:bg-white/[0.04] hover:text-zinc-900 dark:hover:text-zinc-100 active:scale-[0.98] transition-all duration-300 group ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-zinc-500 hover:bg-zinc-50 dark:hover:bg-white/[0.04] hover:text-zinc-900 dark:hover:text-zinc-100 active:scale-[0.98] transition-all duration-300 group ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
           >
-            <HelpCircle className="w-4 h-4 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 shrink-0" />
+            <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-all duration-300 shrink-0" />
             {!isCollapsed && <span className="transition-all duration-500 whitespace-nowrap">Help Center</span>}
           </button>
           <button
             onClick={handleLogout}
             title={isCollapsed ? 'Logout' : ''}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-none text-xs font-bold uppercase tracking-widest text-rose-500 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-300 active:scale-[0.98] group ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-zinc-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-300 active:scale-[0.98] group ${isCollapsed ? 'justify-center lg:px-0' : ''}`}
           >
             <LogOut className="w-4 h-4 group-hover:scale-110 group-hover:translate-x-1 transition-all duration-300 shrink-0" />
             {!isCollapsed && <span className="transition-all duration-500 whitespace-nowrap">Logout</span>}
@@ -105,23 +105,23 @@ export function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, se
         </nav>
       </div>
 
-      <div className={`p-6 mt-auto border-t border-zinc-100 dark:border-white/[0.05] ${isCollapsed ? 'lg:p-4 lg:px-2' : ''}`}>
+      <div className={`p-4 mt-auto border-t border-zinc-100 dark:border-white/[0.05] ${isCollapsed ? 'lg:px-2' : ''}`}>
         <button
           onClick={() => navigate('/profile')}
           title={isCollapsed ? `${user?.firstName} ${user?.lastName}` : ''}
-          className={`w-full flex items-center gap-3 group p-2 rounded-none border border-transparent hover:border-zinc-200 dark:hover:border-white/[0.1] hover:bg-zinc-50 dark:hover:bg-white/[0.04] transition-all duration-300 active:scale-[0.98] ${isCollapsed ? 'justify-center lg:p-1' : ''}`}
+          className={`w-full flex items-center gap-3 group p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/[0.04] transition-all duration-300 active:scale-[0.98] ${isCollapsed ? 'justify-center' : ''}`}
         >
-          <div className={`rounded-none overflow-hidden border border-zinc-200 dark:border-white/10 group-hover:scale-105 group-hover:rotate-3 transition-all duration-500 shrink-0 flex items-center justify-center bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-black text-xs ${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'}`}>
+          <div className={`rounded-full overflow-hidden border border-zinc-200 dark:border-white/10 shrink-0 flex items-center justify-center bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-semibold text-sm ${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'}`}>
             {getInitials(user)}
           </div>
           {!isCollapsed && (
             <>
               <div className="text-left flex-1 min-w-0 transition-all duration-500">
-                <p className="text-xs font-black text-zinc-900 dark:text-zinc-100 truncate uppercase tracking-tighter">{user?.firstName} {user?.lastName}</p>
-                <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 truncate uppercase tracking-widest">{user?.jobTitle}</p>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{user?.jobTitle}</p>
               </div>
-              <div className="w-8 h-8 rounded-none bg-white dark:bg-[#16161a] flex items-center justify-center border border-zinc-100 dark:border-white/[0.1] group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:text-black transition-all duration-500 shrink-0">
-                <ArrowUpRight className="w-3 h-3" />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-all duration-500 shrink-0">
+                <ArrowUpRight className="w-4 h-4" />
               </div>
             </>
           )}
