@@ -16,9 +16,10 @@ interface ResultPanelProps {
   genState: any;
   theme: any;
   nodeTitle?: string;
+  isFloating?: boolean;
 }
 
-export function ResultPanel({ genState, theme, nodeTitle }: ResultPanelProps) {
+export function ResultPanel({ genState, theme, nodeTitle, isFloating }: ResultPanelProps) {
   const {
     currentStep, setCurrentStep,
     generationState, setGeneratedSchema,
@@ -29,8 +30,8 @@ export function ResultPanel({ genState, theme, nodeTitle }: ResultPanelProps) {
   const [pasteValue, setPasteValue] = useState('');
 
   return (
-    <div className="flex flex-col w-full h-full relative overflow-hidden bg-zinc-50 dark:bg-[#0a0a0c]">
-      <div className="flex-1 overflow-hidden relative">
+    <div className={`flex flex-col w-full h-full relative ${isFloating ? 'bg-transparent' : 'bg-zinc-50 dark:bg-[#0a0a0c]'}`}>
+      <div className="flex-1 relative">
         <AnimatePresence mode="wait">
           {generationState === 'processing' ? (
             <motion.div
@@ -45,7 +46,7 @@ export function ResultPanel({ genState, theme, nodeTitle }: ResultPanelProps) {
           ) : null}
         </AnimatePresence>
 
-        <div className="h-full overflow-auto scrollbar-hide">
+        <div className="h-full">
           {currentStep === 'wireframe' && (
             <div className="h-full flex flex-col">
               {generatedSchema ? (

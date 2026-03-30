@@ -90,16 +90,18 @@ export function DynamicRenderer({ schema, mode = 'preview', onSelect, selectedId
 
         switch (comp.type) {
             case 'container':
+                const isForm = comp.id.toLowerCase().includes('form');
                 return (
                     <div
                         key={comp.id}
-                        className={cn(wireframeStyle, "min-h-[40px]")}
+                        className={cn(wireframeStyle, "min-h-[40px]", isForm && "mx-auto")}
                         style={{
                             display: 'flex',
                             flexDirection: comp.layout.direction === 'row' ? 'row' : 'column',
                             gap: `${comp.layout.spacing * 4}px`,
                             padding: `${comp.layout.padding}px`,
                             width: comp.layout.width ? `${comp.layout.width}%` : '100%',
+                            maxWidth: isForm ? '450px' : '100%',
                             height: comp.layout.height ? `${comp.layout.height}px` : 'auto',
                         }}
                         onClick={onClick}
@@ -173,7 +175,7 @@ export function DynamicRenderer({ schema, mode = 'preview', onSelect, selectedId
         <div
             className={cn(
                 "w-full h-full overflow-auto scrollbar-hide",
-                mode === 'wireframe' ? "bg-white dark:bg-[#111113] p-8 rounded-xl border border-zinc-200 dark:border-white/10 relative" : "bg-white dark:bg-[#111113]"
+                mode === 'wireframe' ? "bg-white dark:bg-[#111113] p-4 rounded-xl border border-zinc-200 dark:border-white/10 relative" : "bg-white dark:bg-[#111113]"
             )}
             style={containerStyle}
             onClick={() => {

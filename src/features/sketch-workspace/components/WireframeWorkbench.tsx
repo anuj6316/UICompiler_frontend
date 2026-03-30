@@ -117,23 +117,23 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
     };
 
     return (
-        <div className="flex h-full w-full gap-6 p-6 bg-zinc-50 dark:bg-[#0a0a0c] overflow-hidden relative">
+        <div className="flex h-full w-full gap-4 p-4 bg-zinc-50 dark:bg-[#0a0a0c] overflow-hidden relative">
             {/* Left: Main Canvas Area with Tabs */}
             <div className="flex-1 flex flex-col gap-4 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
                     <div className="flex items-center justify-between px-2 shrink-0">
                         <TabsList className="bg-zinc-200/50 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.05] p-1 h-auto rounded-lg">
-                            <TabsTrigger value="wireframe" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-[#1a1a1f] data-[state=active]:text-indigo-500 data-[state=active]:shadow-sm rounded-md transition-all">
+                            <TabsTrigger value="wireframe" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-indigo-500/20 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-none border border-transparent data-[state=active]:border-indigo-200 dark:data-[state=active]:border-indigo-800 rounded-md transition-all">
                                 <Layout className="w-3.5 h-3.5 mr-2" />
-                                Wireframe
+                                Canvas
                             </TabsTrigger>
-                            <TabsTrigger value="preview" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-[#1a1a1f] data-[state=active]:text-indigo-500 data-[state=active]:shadow-sm rounded-md transition-all">
+                            <TabsTrigger value="preview" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-indigo-500/20 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-none border border-transparent data-[state=active]:border-indigo-200 dark:data-[state=active]:border-indigo-800 rounded-md transition-all">
                                 <Eye className="w-3.5 h-3.5 mr-2" />
-                                Preview
+                                Review
                             </TabsTrigger>
-                            <TabsTrigger value="code" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-[#1a1a1f] data-[state=active]:text-indigo-500 data-[state=active]:shadow-sm rounded-md transition-all">
+                            <TabsTrigger value="code" className="text-[10px] font-mono uppercase tracking-widest py-2 px-4 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-indigo-500/20 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-none border border-transparent data-[state=active]:border-indigo-200 dark:data-[state=active]:border-indigo-800 rounded-md transition-all">
                                 <Code2 className="w-3.5 h-3.5 mr-2" />
-                                JSON Editor
+                                JSON
                             </TabsTrigger>
                         </TabsList>
 
@@ -141,7 +141,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                             {activeTab === 'wireframe' && (
                                 <div className="flex items-center mr-4 border-r border-zinc-200 dark:border-white/10 pr-4">
                                     <Tooltip>
-                                        <TooltipTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                        <TooltipTrigger className="h-11 w-11 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                                             <Info className="w-4 h-4" />
                                         </TooltipTrigger>
                                         <TooltipContent side="bottom" align="end" className="p-4 bg-white dark:bg-[#111113] border-zinc-200 dark:border-white/[0.08] shadow-xl">
@@ -214,16 +214,18 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     variant="outline" 
                                     size="icon"
                                     onClick={() => setIsFullscreen(true)}
-                                    className="h-8 w-8 bg-white/90 dark:bg-black/90 backdrop-blur-md border-zinc-200 dark:border-white/10 shadow-sm"
+                                    className="h-8 w-8 bg-white/90 dark:bg-black/90 backdrop-blur-md border border-zinc-200 dark:border-white/10 shadow-sm"
                                 >
                                     <Maximize2 className="w-3.5 h-3.5" />
                                 </Button>
                             </div>
-                            <div className="flex-1 p-6 overflow-auto" ref={activeTab === 'preview' ? previewContainerRef : null}>
-                                <DynamicRenderer
-                                    schema={schema}
-                                    mode="preview"
-                                />
+                            <div className="flex-1 overflow-hidden" ref={activeTab === 'preview' ? previewContainerRef : null}>
+                                <div className="h-full overflow-auto p-4 custom-scrollbar">
+                                    <DynamicRenderer
+                                        schema={schema}
+                                        mode="preview"
+                                    />
+                                </div>
                             </div>
                         </TabsContent>
 
@@ -252,10 +254,9 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
 
             {/* Right: Inspector */}
             {activeTab !== 'preview' && isInspectorOpen && (
-                <div className="absolute top-24 right-10 w-96 flex flex-col gap-6 shrink-0 h-[calc(100%-8rem)] overflow-hidden z-20 shadow-2xl">
-                    <Card className="flex-1 rounded-xl border-zinc-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#111113]/95 backdrop-blur-md shadow-sm flex flex-col overflow-hidden">
-                    <CardHeader className="py-4 px-6 border-b border-zinc-100 dark:border-white/[0.05] shrink-0 flex flex-row items-center justify-between">
-                        <CardTitle className="text-[11px] font-mono uppercase tracking-widest text-zinc-400">Inspector</CardTitle>
+                <div className="w-96 flex flex-col gap-6 shrink-0 h-full overflow-hidden transition-all duration-300 ease-in-out">
+                    <Card className="flex-1 rounded-xl border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#111113] shadow-sm flex flex-col overflow-hidden">
+                    <CardHeader className="py-4 px-6 border-b border-zinc-100 dark:border-white/[0.05] shrink-0 flex flex-row items-center justify-end">
                         <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg text-[9px] font-mono uppercase tracking-widest border-zinc-200 dark:border-white/10 shadow-sm" onClick={handleCopy}>
                             {isCopied ? <Check className="w-3 h-3 mr-1.5" /> : <Copy className="w-3 h-3 mr-1.5" />}
                             Copy JSON
@@ -265,18 +266,18 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                         {selectedComponent && activeTab === 'wireframe' ? (
                             <div className="w-full space-y-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Component ID</label>
+                                    <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Component ID</label>
                                     <div className="text-xs font-mono p-3 bg-zinc-50 dark:bg-[#1a1a1f] border border-zinc-100 dark:border-white/[0.05] rounded-lg text-indigo-500">{selectedComponent.id}</div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Type</label>
+                                    <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Type</label>
                                     <div className="text-[10px] font-mono uppercase tracking-widest px-3 py-1 bg-indigo-500/10 text-indigo-500 inline-block rounded-md">{selectedComponent.type}</div>
                                 </div>
 
                                 <div className="pt-6 border-t border-zinc-100 dark:border-white/[0.05] space-y-5">
                                     {selectedComponent.text !== undefined && (
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Text Content</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Text Content</Label>
                                             <Input 
                                                 type="text"
                                                 value={selectedComponent.text}
@@ -287,7 +288,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     )}
                                     {selectedComponent.placeholder !== undefined && (
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Placeholder</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Placeholder</Label>
                                             <Input 
                                                 type="text"
                                                 value={selectedComponent.placeholder}
@@ -298,7 +299,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     )}
                                     {selectedComponent.src !== undefined && (
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Image Source</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Image Source</Label>
                                             <Input 
                                                 type="text"
                                                 value={selectedComponent.src}
@@ -309,7 +310,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     )}
                                     {selectedComponent.icon !== undefined && (
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Icon Name</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Icon Name</Label>
                                             <Input 
                                                 type="text"
                                                 value={selectedComponent.icon}
@@ -320,7 +321,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     )}
                                     {selectedComponent.variant !== undefined && (
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Variant</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Variant</Label>
                                             <Select 
                                                 value={selectedComponent.variant || 'default'}
                                                 onValueChange={(value) => handleUpdateComponent({ variant: value })}
@@ -341,7 +342,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     )}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Width (%)</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Width (%)</Label>
                                             <Input 
                                                 type="number"
                                                 value={selectedComponent.layout.width || 100}
@@ -350,7 +351,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Height (px)</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Height (px)</Label>
                                             <Input 
                                                 type="number"
                                                 value={selectedComponent.layout.height || ''}
@@ -362,7 +363,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Flex Direction</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Flex Direction</Label>
                                             <Select 
                                                 value={selectedComponent.layout.direction || 'column'}
                                                 onValueChange={(value: 'row' | 'column') => handleUpdateLayout({ direction: value })}
@@ -377,7 +378,7 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                             </Select>
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Spacing</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Spacing</Label>
                                             <Input 
                                                 type="number"
                                                 value={selectedComponent.layout.spacing || 0}
@@ -386,12 +387,12 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Padding</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Padding</Label>
                                             <Input 
                                                 type="number"
                                                 value={selectedComponent.layout.padding || 0}
                                                 onChange={(e) => handleUpdateLayout({ padding: Number(e.target.value) })}
-                                                className="w-full text-xs font-mono bg-zinc-50 dark:bg-[#1a1a1f] border-zinc-200 dark:border-white/[0.05] focus-visible:ring-1 focus-visible:ring-indigo-500"
+                                                className="w-full text-xs font-mono bg-white dark:bg-[#1a1a1f] border-zinc-300 dark:border-white/[0.15] focus-visible:ring-2 focus-visible:ring-indigo-500"
                                             />
                                         </div>
                                     </div>
@@ -400,19 +401,21 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                         ) : activeTab === 'wireframe' ? (
                             <div className="w-full space-y-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Root Node</label>
-                                    <div className="text-xs font-mono p-3 bg-zinc-50 dark:bg-[#1a1a1f] border border-zinc-100 dark:border-white/[0.05] rounded-lg text-amber-500">Page Layout</div>
+                                    <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Root Node</label>
+                                    <div className="inline-flex items-center px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                                        <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Page Layout</span>
+                                    </div>
                                 </div>
                                 
                                 <div className="pt-6 border-t border-zinc-100 dark:border-white/[0.05] space-y-5">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Flex Direction</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Flex Direction</Label>
                                             <Select 
                                                 value={schema.layout.direction || 'column'}
                                                 onValueChange={(value: 'row' | 'column') => handleUpdatePageLayout({ direction: value })}
                                             >
-                                                <SelectTrigger className="w-full text-xs font-mono bg-zinc-50 dark:bg-[#1a1a1f] border-zinc-200 dark:border-white/[0.05] focus:ring-1 focus:ring-amber-500">
+                                                <SelectTrigger className="w-full text-xs font-mono bg-white dark:bg-[#1a1a1f] border-zinc-300 dark:border-white/[0.15] focus:ring-2 focus:ring-indigo-500">
                                                     <SelectValue placeholder="Select direction" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -422,21 +425,21 @@ export function WireframeWorkbench({ schema, onSchemaChange }: WireframeWorkbenc
                                             </Select>
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Spacing</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Spacing</Label>
                                             <Input 
                                                 type="number"
                                                 value={schema.layout.spacing || 0}
                                                 onChange={(e) => handleUpdatePageLayout({ spacing: Number(e.target.value) })}
-                                                className="w-full text-xs font-mono bg-zinc-50 dark:bg-[#1a1a1f] border-zinc-200 dark:border-white/[0.05] focus-visible:ring-1 focus-visible:ring-amber-500"
+                                                className="w-full text-xs font-mono bg-white dark:bg-[#1a1a1f] border-zinc-300 dark:border-white/[0.15] focus-visible:ring-2 focus-visible:ring-indigo-500"
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Padding</Label>
+                                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Padding</Label>
                                             <Input 
                                                 type="number"
                                                 value={schema.layout.padding || 0}
                                                 onChange={(e) => handleUpdatePageLayout({ padding: Number(e.target.value) })}
-                                                className="w-full text-xs font-mono bg-zinc-50 dark:bg-[#1a1a1f] border-zinc-200 dark:border-white/[0.05] focus-visible:ring-1 focus-visible:ring-amber-500"
+                                                className="w-full text-xs font-mono bg-white dark:bg-[#1a1a1f] border-zinc-300 dark:border-white/[0.15] focus-visible:ring-2 focus-visible:ring-indigo-500"
                                             />
                                         </div>
                                     </div>

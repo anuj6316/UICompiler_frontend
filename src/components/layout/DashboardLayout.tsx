@@ -12,7 +12,7 @@ export function DashboardLayout({ children, header }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 dark:bg-[#111113] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-500">
+    <div className="h-full w-full bg-zinc-50 dark:bg-[#111113] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-500">
       
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -31,7 +31,7 @@ export function DashboardLayout({ children, header }: DashboardLayoutProps) {
       />
 
       {/* Main Content Area */}
-      <main className={`min-h-screen flex flex-col transition-all duration-500 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+      <main className={`h-screen flex flex-col transition-all duration-500 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         
         {/* Render provided header OR fallback to default Header */}
         {header ? header({ setIsMobileMenuOpen }) : <Header setIsMobileMenuOpen={setIsMobileMenuOpen} />}

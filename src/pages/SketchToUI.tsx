@@ -16,6 +16,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { CanvasArea } from '../features/sketch-workspace/components/CanvasArea';
 import { ResultPanel, WorkflowTab } from '../features/sketch-workspace/components/ResultPanel';
+import { FloatingInspector } from '../features/sketch-workspace/components/FloatingInspector';
+import { WireframeWorkbench } from '../features/sketch-workspace/components/WireframeWorkbench';
 import { useGeneration } from '../features/sketch-workspace/hooks/useGeneration';
 import { useCanvas } from '../features/sketch-workspace/hooks/useCanvas';
 import { 
@@ -82,7 +84,7 @@ export default function SketchToUI() {
           </button>
           <button 
             onClick={() => navigate('/')}
-            className="hidden lg:flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-300 active:scale-[0.98]"
+            className="hidden lg:flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-300 active:scale-[0.98] h-11 px-4"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Dashboard</span>
@@ -176,7 +178,7 @@ export default function SketchToUI() {
       </header>
     )}
   >
-    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden bg-zinc-50 dark:bg-[#09090b]">
+    <div className="h-[calc(100vh-4rem)] flex-1 flex flex-col w-full relative overflow-hidden bg-zinc-50 dark:bg-[#09090b]">
       <Toaster position="top-center" />
       <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen}>
         <CommandInput placeholder="Type a command or search..." />
@@ -276,14 +278,15 @@ export default function SketchToUI() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden relative">
+        <div className="relative h-full w-full overflow-hidden">
           {currentStep === 'sketch' && (
             <CanvasArea canvasState={canvasState} generated={generated} />
           )}
-          {currentStep !== 'sketch' && (
-            <ResultPanel genState={genState} theme={THEMES[0]} />
+          {currentStep !== 'sketch' && genState.generatedSchema && (
+            <WireframeWorkbench schema={genState.generatedSchema} onSchemaChange={genState.setGeneratedSchema} />
           )}
         </div>
+        <FloatingInspector genState={genState} theme={THEMES[0]} />
       </div>
     </div>
   </DashboardLayout>

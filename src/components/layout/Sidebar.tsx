@@ -120,7 +120,7 @@ export function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, se
                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{user?.firstName} {user?.lastName}</p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{user?.jobTitle}</p>
               </div>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-all duration-500 shrink-0">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-all duration-500 shrink-0">
                 <ArrowUpRight className="w-4 h-4" />
               </div>
             </>

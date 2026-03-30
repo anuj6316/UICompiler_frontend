@@ -29,7 +29,7 @@ export default function Home() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-grid dark:bg-grid-dark relative">
+      <div className="h-full bg-grid dark:bg-grid-dark relative overflow-auto">
         <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto w-full relative z-10">
           <div className="absolute top-0 left-0 right-0 h-[600px] overflow-hidden pointer-events-none -z-0 rounded-b-[100px]" style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}>
             <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-indigo-500/[0.04] dark:bg-cyan-500/[0.08] rounded-full blur-[100px] transition-colors duration-500 animate-pulse" />
