@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@import "../node_modules/tw-animate-css/dist/tw-animate.css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@theme {
+  --font-sans: "Geist Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-heading: "Space Grotesk", sans-serif;
+
+  /* Reconciled Present Theme Tokens (Zinc + Obsidian) */
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.145 0 0);
+
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.145 0 0);
+
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.145 0 0);
+
+  --color-primary: oklch(0.205 0 0);
+  /* Zinc-900 */
+  --color-primary-foreground: oklch(0.985 0 0);
+
+  --color-secondary: oklch(0.967 0.001 286.375);
+  /* Zinc-100 */
+  --color-secondary-foreground: oklch(0.205 0 0);
+
+  --color-muted: oklch(0.967 0.001 286.375);
+  --color-muted-foreground: oklch(0.556 0 0);
+
+  --color-accent: oklch(0.967 0.001 286.375);
+  --color-accent-foreground: oklch(0.205 0 0);
+
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive-foreground: oklch(0.577 0.245 27.325);
+
+  --color-border: oklch(0.922 0 0);
+  /* Zinc-200 */
+  --color-input: oklch(0.922 0 0);
+  --color-ring: oklch(0.708 0 0);
+
+  /* Radius Mandate: Sharp Corners */
+  --radius-none: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+}
+
+/* Dark Mode Overrides (Refined for "Linear" depth) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-background: oklch(0.12 0.015 285);
+  /* Deeper midnight slate */
+  --color-foreground: oklch(0.98 0.01 285);
+
+  --color-card: oklch(0.16 0.015 285);
+  /* Slightly lighter card bg */
+  --color-card-foreground: oklch(0.98 0.01 285);
+
+  --color-popover: oklch(0.16 0.015 285);
+  --color-popover-foreground: oklch(0.98 0.01 285);
+
+  --color-primary: oklch(0.98 0.01 285);
+  --color-primary-foreground: oklch(0.12 0.015 285);
+
+  --color-secondary: oklch(0.22 0.015 285);
+  --color-secondary-foreground: oklch(0.98 0.01 285);
+
+  --color-muted: oklch(0.22 0.015 285);
+  --color-muted-foreground: oklch(0.65 0.01 285);
+
+  --color-accent: oklch(0.22 0.015 285);
+  --color-accent-foreground: oklch(0.98 0.01 285);
+
+  --color-border: oklch(1 0 0 / 12%);
+  --color-input: oklch(1 0 0 / 15%);
+  --color-ring: oklch(0.88 0.18 100 / 0.5);
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image: radial-gradient(circle, oklch(1 0 0 / 8%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .bg-grid-dark {
+    background-image: radial-gradient(circle, oklch(1 0 0 / 12%) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .glass {
+    @apply bg-white/5 dark:bg-black/40 backdrop-blur-xl border border-white/10;
+  }
+
+  .bento-card {
+    @apply bg-card text-card-foreground p-6 shadow-sm ring-1 ring-zinc-200/10;
+  }
+
+  .border-dashed-ring {
+    @apply border border-dashed border-zinc-300 dark:border-white/20;
+  }
+
+  .btn-dashed {
+    @apply border border-dashed border-zinc-400 dark:border-white/30 hover:border-zinc-900 dark:hover:border-white transition-colors duration-300;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: oklch(1 0 0 / 10%);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: oklch(1 0 0 / 20%);
+    background-clip: content-box;
+  }
+}
+
+:root {
+  --radius: 0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading tracking-tight font-extrabold;
+  }
+}

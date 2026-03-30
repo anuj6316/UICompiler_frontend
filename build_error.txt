@@ -1,0 +1,21 @@
+
+> react-example@0.0.0 build
+> vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 3 modules transformed.
+✗ Build failed in 60ms
+error during build:
+[@tailwindcss/vite:generate:build] "./dist/tw-animate.css" is not exported under the condition "style" from package /home/mindmap/Desktop/UICompiler/frontend/node_modules/tw-animate-css (see exports field in /home/mindmap/Desktop/UICompiler/frontend/node_modules/tw-animate-css/package.json)
+file: /home/mindmap/Desktop/UICompiler/frontend/src/index.css
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/ExportsFieldPlugin.js:123:7
+    at Hook.eval [as callAsync] (eval at create (/home/mindmap/Desktop/UICompiler/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:22:1)
+    at Resolver.doResolve (/home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/Resolver.js:737:16)
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:80:17
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/DescriptionFileUtils.js:161:24
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/forEachBail.js:39:13
+    at onJson (/home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/DescriptionFileUtils.js:96:6)
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/DescriptionFileUtils.js:123:7
+    at SyncAsyncFileSystemDecorator.readJson (/home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/SyncAsyncFileSystemDecorator.js:204:6)
+    at /home/mindmap/Desktop/UICompiler/frontend/node_modules/enhanced-resolve/lib/DescriptionFileUtils.js:104:26
