@@ -6,7 +6,7 @@ import {
   CheckCircle2, Loader2, Copy, Check, ExternalLink, History as HistoryIcon,
   Settings, HelpCircle, LogOut, User, Eye, Code, Search, Command, Sliders,
   LayoutDashboard, Layers, Menu, X, ArrowLeft, Calendar, Sun, Moon,
-  Layout, Rocket
+  Layout, Rocket, ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, getInitials } from '../contexts/UserContext';
@@ -32,6 +32,20 @@ import {
   Input, Textarea, Toaster
 } from '@/components/ui';
 import { toast } from 'sonner';
+import {
+  HeroSection,
+  StylePresets,
+  PromptArea,
+  GalleryGrid,
+  FeatureCards,
+  StepGuide,
+  FAQSection,
+  CTASection,
+  ScrollProgress,
+  KeyboardShortcuts,
+  BackToSketchButton,
+  UI_THEMES,
+} from '../components/doodle-ui';
 
 const THEMES = [
   { id: 'modern', name: 'Modern', bg: 'bg-white dark:bg-[#111113]', primary: 'bg-zinc-900 dark:bg-zinc-200', text: 'text-zinc-900 dark:text-zinc-200', secondary: 'bg-zinc-100 dark:bg-[#1e1e24]', border: 'border-zinc-200 dark:border-white/[0.1]' },
@@ -45,8 +59,14 @@ export default function SketchToUI() {
   const { user, logout } = useUser();
   const { isDark, toggleTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
   
-  // Sidebar & project state
+  const [showLanding, setShowLanding] = useState(true);
+  const [selectedSketchStyle, setSelectedSketchStyle] = useState('wireframe');
+  const [selectedUITheme, setSelectedUITheme] = useState('modern');
+  const [prompt, setPrompt] = useState('');
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  
   const [projectName, setProjectName] = useState('Untitled Project');
   const [isEditingName, setIsEditingName] = useState(false);
   const projectNameRef = useRef<HTMLInputElement>(null);
@@ -62,6 +82,10 @@ export default function SketchToUI() {
         e.preventDefault();
         setIsCommandOpen((open) => !open);
       }
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        setShortcutsOpen((open) => !open);
+      }
     };
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
@@ -71,7 +95,101 @@ export default function SketchToUI() {
   const { generationState, handleProcessStep, currentStep, setCurrentStep } = genState;
   const generated = generationState === 'ready';
 
-  return (
+  const handleStartCreating = () => {
+    setShowLanding(false);
+  };
+
+  const handleBackToLanding = () => {
+    setShowLanding(true);
+  };
+
+  const handleViewExamples = () => {
+    galleryRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleGenerate = () => {
+    if (canvasState.elements.length > 0) {
+      handleProcessStep('wireframe');
+      setCurrentStep('wireframe');
+      toast.success('UI Cluster created on board');
+    } else {
+      toast.error('Draw something first!');
+    }
+  };
+
+  const activeTheme = THEMES.find(t => t.id === selectedUITheme) || THEMES[0];
+  const selectedThemeName = UI_THEMES.find(t => t.id === selectedUITheme)?.name || 'Modern';
+
+  const landingView = (
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#09090b]">
+      <Toaster position="top-center" />
+      <ScrollProgress />
+      
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#111113]/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-colors"
+              aria-label="Back to dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-bold uppercase tracking-widest">Sketch to UI</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="h-10 w-10 rounded-none text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            <Button 
+              onClick={handleStartCreating}
+              className="h-10 px-6 rounded-none text-xs font-bold uppercase tracking-widest bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-300 transition-all"
+            >
+              Open Workspace
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="pt-16">
+        <HeroSection 
+          onStartCreating={handleStartCreating} 
+          onViewExamples={handleViewExamples} 
+        />
+        <StylePresets
+          selectedSketchStyle={selectedSketchStyle}
+          onSelectSketchStyle={setSelectedSketchStyle}
+          selectedUITheme={selectedUITheme}
+          onSelectUITheme={setSelectedUITheme}
+        />
+        <PromptArea
+          prompt={prompt}
+          onChange={setPrompt}
+          onGenerate={() => handleStartCreating()}
+          isGenerating={false}
+          selectedStyle={selectedSketchStyle}
+        />
+        <div ref={galleryRef}>
+          <GalleryGrid />
+        </div>
+        <FeatureCards />
+        <StepGuide />
+        <FAQSection />
+        <CTASection onStartCreating={handleStartCreating} />
+      </div>
+
+      <KeyboardShortcuts open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+    </div>
+  );
+
+  const workspaceView = (
     <DashboardLayout
       header={({ setIsMobileMenuOpen }) => (
         <header className="h-16 border-b border-zinc-200 dark:border-white/[0.08] bg-white/80 dark:bg-[#111113]/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
@@ -79,15 +197,17 @@ export default function SketchToUI() {
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
             className="lg:hidden p-2.5 bg-white dark:bg-[#1a1a1f] border border-zinc-200 dark:border-white/[0.08] rounded-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 shadow-sm dark:shadow-none"
+            aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>
           <button 
-            onClick={() => navigate('/')}
+            onClick={handleBackToLanding}
             className="hidden lg:flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-300 active:scale-[0.98] h-11 px-4"
+            aria-label="Back to landing page"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Dashboard</span>
+            <span>Landing</span>
           </button>
           <div className="h-4 w-px bg-zinc-200 dark:bg-white/[0.08] hidden lg:block" />
           <div className="flex items-center gap-2">
@@ -111,6 +231,12 @@ export default function SketchToUI() {
               </h2>
             )}
             <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest px-2 py-0 rounded-none bg-zinc-100 dark:bg-[#1e1e24] text-zinc-500">Draft</Badge>
+            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest px-2 py-0 rounded-none">
+              {canvasState.elements.length} elements
+            </Badge>
+            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest px-2 py-0 rounded-none hidden sm:inline-flex">
+              {selectedThemeName}
+            </Badge>
           </div>
         </div>
 
@@ -142,6 +268,7 @@ export default function SketchToUI() {
             size="icon" 
             onClick={toggleTheme}
             className="h-10 w-10 rounded-none text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+            aria-label="Toggle theme"
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
@@ -234,11 +361,12 @@ export default function SketchToUI() {
         </CommandList>
       </CommandDialog>
 
-      {/* Main Workspace */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Tab Line Layout */}
         <div className="bg-white dark:bg-[#111113] border-b border-zinc-200 dark:border-white/[0.05] p-1 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-1">
+            {currentStep !== 'sketch' && (
+              <BackToSketchButton onClick={() => setCurrentStep('sketch')} />
+            )}
             <WorkflowTab
               step="sketch"
               label="00: Sketch"
@@ -286,9 +414,34 @@ export default function SketchToUI() {
             <WireframeWorkbench schema={genState.generatedSchema} onSchemaChange={genState.setGeneratedSchema} />
           )}
         </div>
-        <FloatingInspector genState={genState} theme={THEMES[0]} />
+        <FloatingInspector genState={genState} theme={activeTheme} />
       </div>
+
+      <KeyboardShortcuts open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   </DashboardLayout>
+  );
+
+  return (
+    <AnimatePresence mode="wait">
+      {showLanding ? (
+        <motion.div
+          key="landing"
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.3 }}
+        >
+          {landingView}
+        </motion.div>
+      ) : (
+        <motion.div
+          key="workspace"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {workspaceView}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

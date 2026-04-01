@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Wand2, ChevronDown, Loader2, Check, Play, CheckCircle2,
-  Code2, Palette, FileJson, Copy, Layout, Settings, Rocket
+  Code2, Palette, FileJson, Copy, Layout, Settings, Rocket, ArrowLeft
 } from 'lucide-react';
 import {
   Button, Card, CardContent, CardHeader, CardTitle,
@@ -52,38 +52,22 @@ export function ResultPanel({ genState, theme, nodeTitle, isFloating }: ResultPa
               {generatedSchema ? (
                 <WireframeWorkbench schema={generatedSchema} onSchemaChange={setGeneratedSchema} />
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-8">
-                  <div className="w-20 h-20 bg-white dark:bg-[#1a1a1f] border border-zinc-100 dark:border-white/[0.08] flex items-center justify-center">
-                    <FileJson className="w-8 h-8 text-zinc-300" />
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-6">
+                  <div className="w-16 h-16 bg-zinc-100 dark:bg-white/[0.05] flex items-center justify-center">
+                    <FileJson className="w-7 h-7 text-zinc-300 dark:text-zinc-600" />
                   </div>
-                  <div className="max-w-md space-y-3">
-                    <h3 className="text-xl font-bold tracking-tight">Wireframe Workbench</h3>
-                    <p className="text-sm text-zinc-500">Paste your VLM-generated JSON output below to trigger the interactive wireframe renderer.</p>
+                  <div className="max-w-sm space-y-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest">No Wireframe Yet</h3>
+                    <p className="text-xs text-zinc-500">Go back to Sketch and click "Generate UI" to create a wireframe from your drawing.</p>
                   </div>
-                  <div className="w-full max-w-lg space-y-4">
-                    <Textarea
-                      placeholder="Paste JSON here..."
-                      className="min-h-[200px] font-mono text-[10px] bg-white dark:bg-black/20 rounded-none resize-none"
-                      value={pasteValue}
-                      onChange={(e) => setPasteValue(e.target.value)}
-                    />
-                    <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        className="flex-1 rounded-none uppercase text-[10px] font-bold tracking-widest h-12"
-                        onClick={() => handlePasteSchema(JSON.stringify(SAMPLE_SCHEMA, null, 2))}
-                      >
-                        Load Sample
-                      </Button>
-                      <Button
-                        className="flex-1 rounded-none uppercase text-[10px] font-bold tracking-widest h-12"
-                        disabled={!pasteValue}
-                        onClick={() => handlePasteSchema(pasteValue)}
-                      >
-                        Initialize Preview
-                      </Button>
-                    </div>
-                  </div>
+                  <Button
+                    onClick={() => setCurrentStep('sketch')}
+                    variant="outline"
+                    className="rounded-none uppercase text-[10px] font-bold tracking-widest h-10 px-6"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 mr-2" />
+                    Back to Sketch
+                  </Button>
                 </div>
               )}
             </div>
@@ -91,22 +75,24 @@ export function ResultPanel({ genState, theme, nodeTitle, isFloating }: ResultPa
 
           {currentStep === 'design_system' && (
             <div className="p-12 flex flex-col items-center justify-center h-full text-center space-y-6">
-              <Palette className="w-16 h-16 text-zinc-200" />
-              <h3 className="text-xl font-bold uppercase tracking-widest">Step 02: Design System</h3>
-              <p className="text-sm text-zinc-500 max-w-sm">Finalize your theme tokens, typography, and adaptive color palettes before moving to production code.</p>
-              <Button onClick={() => handleProcessStep('design_system')} className="rounded-none h-12 px-8 uppercase text-[10px] font-bold tracking-widest">
-                Process Design Tokens
+              <Palette className="w-12 h-12 text-zinc-200 dark:text-zinc-700" />
+              <h3 className="text-sm font-bold uppercase tracking-widest">Design System</h3>
+              <p className="text-xs text-zinc-500 max-w-sm">Generate wireframe first, then design tokens will be auto-created.</p>
+              <Button onClick={() => setCurrentStep('wireframe')} variant="outline" className="rounded-none uppercase text-[10px] font-bold tracking-widest h-10 px-6">
+                <ArrowLeft className="w-3.5 h-3.5 mr-2" />
+                Go to Wireframe
               </Button>
             </div>
           )}
 
           {currentStep === 'production_code' && (
             <div className="p-12 flex flex-col items-center justify-center h-full text-center space-y-6">
-              <Code2 className="w-16 h-16 text-zinc-200" />
-              <h3 className="text-xl font-bold uppercase tracking-widest">Step 03: Production Code</h3>
-              <p className="text-sm text-zinc-500 max-w-sm">Generating high-quality React components using Tailwind CSS and modern best practices.</p>
-              <Button onClick={() => handleProcessStep('production_code')} className="rounded-none h-12 px-8 uppercase text-[10px] font-bold tracking-widest">
-                Generate Production Assets
+              <Code2 className="w-12 h-12 text-zinc-200 dark:text-zinc-700" />
+              <h3 className="text-sm font-bold uppercase tracking-widest">Production Code</h3>
+              <p className="text-xs text-zinc-500 max-w-sm">Complete the wireframe and design system steps first.</p>
+              <Button onClick={() => setCurrentStep('design_system')} variant="outline" className="rounded-none uppercase text-[10px] font-bold tracking-widest h-10 px-6">
+                <ArrowLeft className="w-3.5 h-3.5 mr-2" />
+                Go to Design System
               </Button>
             </div>
           )}

@@ -3,14 +3,19 @@ import { Stage, Layer, Line, Rect, Circle, Text as KonvaText, Transformer, Image
 import { Html } from 'react-konva-utils';
 import useImage from 'use-image';
 import { PenTool } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { FloatingToolbar } from './FloatingToolbar';
 import { CanvasMinimap } from './CanvasMinimap';
 import { CanvasControls } from './CanvasControls';
 import { CanvasNavigator } from './CanvasNavigator';
 import { CanvasConnections } from './CanvasConnections';
-import { ElementType, CanvasElement } from '../hooks/useCanvas';
+import { QuickStartTemplates } from '../../../components/doodle-ui/QuickStartTemplates';
+import { CanvasStyleSelector } from '../../../components/doodle-ui/CanvasStyleSelector';
+import { DrawingGuidance } from '../../../components/doodle-ui/DrawingGuidance';
+import { CanvasStatusBar } from '../../../components/doodle-ui/CanvasStatusBar';
+import { ElementType, CanvasElement, SketchStyle } from '../hooks/useCanvas';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { toast } from 'sonner';
 
 const URLImage = ({ shape, isSelected, onSelect, onChange, isSelectTool }: any) => {
   const [img] = useImage(shape.src);
@@ -53,7 +58,7 @@ const URLImage = ({ shape, isSelected, onSelect, onChange, isSelectTool }: any) 
   );
 };
 
-const RenderElement = ({ shape, isSelected, onSelect, onChange, isSelectTool, stageScale = 1 }: any) => {
+const RenderElement = ({ shape, isSelected, onSelect, onChange, isSelectTool, stageScale = 1, tension = 0.5 }: any) => {
   const shapeRef = useRef<any>(null);
   const trRef = useRef<any>(null);
 
@@ -120,7 +125,7 @@ const RenderElement = ({ shape, isSelected, onSelect, onChange, isSelectTool, st
         <Line
           {...commonProps}
           points={shape.points}
-          tension={0.5}
+          tension={tension}
           lineCap="round"
           lineJoin="round"
           hitStrokeWidth={10}
@@ -208,15 +213,19 @@ const RenderElement = ({ shape, isSelected, onSelect, onChange, isSelectTool, st
 interface CanvasAreaProps {
   canvasState: any;
   generated: boolean;
+  selectedStyle: SketchStyle;
+  onSelectStyle: (style: SketchStyle) => void;
 }
 
-export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
+export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyle }: CanvasAreaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const { isDark } = useTheme();
+  const [showGuidance, setShowGuidance] = useState(true);
+  const hasDrawn = canvasState.elements.length > 0;
 
   useEffect(() => {
-    const checkSize = () => {
+    const updateSize = () => {
       if (containerRef.current) {
         setStageSize({
           width: containerRef.current.offsetWidth,
@@ -224,10 +233,16 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
         });
       }
     };
-    checkSize();
-    window.addEventListener('resize', checkSize);
-    return () => window.removeEventListener('resize', checkSize);
-  }, [generated]);
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  useEffect(() => {
+    if (hasDrawn && showGuidance) {
+      setShowGuidance(false);
+    }
+  }, [hasDrawn, showGuidance]);
 
   const onFitToScreen = () => {
     if (canvasState.elements.length === 0) {
@@ -264,37 +279,16 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
     });
   };
 
+  const cursorClass = canvasState.tool === 'select' ? 'cursor-default' :
+    canvasState.tool === 'pan' ? 'cursor-grab' :
+    canvasState.tool === 'text' ? 'cursor-text' :
+    'cursor-crosshair';
+
   return (
-    <div ref={containerRef} className="flex-1 relative bg-background overflow-hidden cursor-crosshair">
-      <FloatingToolbar
-        tool={canvasState.tool} setTool={canvasState.setTool}
-        selectedId={canvasState.selectedId}
-        elements={canvasState.elements} setElements={canvasState.setElements}
-        fillColor={canvasState.fillColor} setFillColor={canvasState.setFillColor}
-        fontSize={canvasState.fontSize} setFontSize={canvasState.setFontSize}
-        fontFamily={canvasState.fontFamily} setFontFamily={canvasState.setFontFamily}
-        handleImageUpload={canvasState.handleImageUpload}
-        undo={canvasState.undo} redo={canvasState.redo} clearCanvas={canvasState.clearCanvasBase}
-      />
-
-      <CanvasControls 
-        stageScale={canvasState.stageScale} 
-        setStageScale={canvasState.setStageScale}
-        setStagePos={canvasState.setStagePos}
-        onFitToScreen={onFitToScreen}
-        zoomLevel={canvasState.stageScale}
-      />
-
-      <CanvasMinimap 
-        elements={canvasState.elements}
-        stagePos={canvasState.stagePos}
-        stageScale={canvasState.stageScale}
-        setStagePos={canvasState.setStagePos}
-        viewportSize={stageSize}
-      />
-      {/* Professional Dynamic Duo-Grid */}
+    <div ref={containerRef} className={`flex-1 relative bg-background overflow-hidden ${cursorClass}`}>
+      {/* Grid Background - z-0 */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `
             radial-gradient(${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'} 2px, transparent 0),
@@ -312,15 +306,16 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
         }}
       />
       
-      {/* Subtle Paper Texture Overlay */}
+      {/* Paper Texture - z-0 */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] mix-blend-overlay" 
+        className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] mix-blend-overlay z-0" 
         style={{ 
           backgroundImage: `url('https://www.transparenttextures.com/patterns/clean-gray-paper.png')`,
           willChange: 'opacity'
         }} 
       />
-      
+
+      {/* Konva Stage - z-10 */}
       {stageSize.width > 0 && (
         <Stage
           width={stageSize.width}
@@ -346,6 +341,7 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
                 isSelected={el.id === canvasState.selectedId}
                 isSelectTool={canvasState.tool === 'select'}
                 stageScale={canvasState.stageScale}
+                tension={canvasState.styleConfig?.tension || 0.5}
                 onSelect={() => {
                   if (canvasState.tool === 'select') {
                     canvasState.setSelectedId(el.id);
@@ -361,13 +357,13 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
             <CanvasConnections elements={canvasState.elements} />
           </Layer>
           
-          {/* Native Active Drawing Layer (Bypasses React while drawing) */}
+          {/* Active Drawing Layer */}
           <Layer id="active-drawing-layer">
             <Line
               ref={canvasState.activeLineRef}
-              stroke={isDark ? '#ffffff' : '#000000'}
-              strokeWidth={3 / canvasState.stageScale}
-              tension={0.5}
+              stroke={canvasState.styleConfig?.stroke || (isDark ? '#ffffff' : '#000000')}
+              strokeWidth={(canvasState.styleConfig?.strokeWidth || 3) / canvasState.stageScale}
+              tension={canvasState.styleConfig?.tension || 0.5}
               lineCap="round"
               lineJoin="round"
               points={[]}
@@ -376,6 +372,89 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
         </Stage>
       )}
 
+      {/* Empty State / Drawing Guidance - z-20 */}
+      <AnimatePresence>
+        {!hasDrawn && showGuidance && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center"
+          >
+            <div className="text-center max-w-lg px-6">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08]"
+              >
+                <PenTool className="w-8 h-8 text-zinc-400 dark:text-zinc-600" />
+              </motion.div>
+              
+              <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-900 dark:text-white mb-2">
+                Start Sketching
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8">
+                Draw your interface idea or pick a template below
+              </p>
+              
+              {/* Quick Templates */}
+              <div className="pointer-events-auto mb-6">
+                <QuickStartTemplates onSelect={(elements) => {
+                  canvasState.loadTemplate(elements);
+                  toast.success('Template loaded');
+                }} />
+              </div>
+              
+              {/* Tool hints */}
+              <div className="flex items-center justify-center gap-4 text-[9px] font-bold uppercase tracking-widest text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded-none bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">P</kbd> PEN
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded-none bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">R</kbd> RECT
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded-none bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">?</kbd> SHORTCUTS
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tool-Specific Guidance - z-20 */}
+      <AnimatePresence>
+        {hasDrawn && showGuidance && canvasState.elements.length < 3 && (
+          <DrawingGuidance 
+            tool={canvasState.tool} 
+            onDismiss={() => setShowGuidance(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Floating Toolbar - z-30 */}
+      <FloatingToolbar
+        tool={canvasState.tool} setTool={canvasState.setTool}
+        selectedId={canvasState.selectedId}
+        elements={canvasState.elements} setElements={canvasState.setElements}
+        fillColor={canvasState.fillColor} setFillColor={canvasState.setFillColor}
+        fontSize={canvasState.fontSize} setFontSize={canvasState.setFontSize}
+        fontFamily={canvasState.fontFamily} setFontFamily={canvasState.setFontFamily}
+        handleImageUpload={canvasState.handleImageUpload}
+        undo={canvasState.undo} redo={canvasState.redo} clearCanvas={canvasState.clearCanvasBase}
+      />
+
+      {/* Canvas Controls - z-30 (right side) */}
+      <CanvasControls 
+        stageScale={canvasState.stageScale} 
+        setStageScale={canvasState.setStageScale}
+        setStagePos={canvasState.setStagePos}
+        onFitToScreen={onFitToScreen}
+        zoomLevel={canvasState.stageScale}
+      />
+
+      {/* Canvas Navigator - z-30 */}
       <CanvasNavigator 
         elements={canvasState.elements}
         selectedId={canvasState.selectedId}
@@ -385,37 +464,27 @@ export function CanvasArea({ canvasState, generated }: CanvasAreaProps) {
         viewportSize={stageSize}
       />
 
-      {canvasState.elements.length === 0 && !canvasState.isDrawing && !generated && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 pointer-events-none flex items-center justify-center z-0"
-        >
-          <div className="text-center max-w-xs">
-            <div className="relative w-24 h-24 mx-auto mb-10">
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  opacity: [0.5, 0.8, 0.5]
-                }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute inset-0 bg-zinc-100 dark:bg-white/[0.03] rounded-none rotate-6" 
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <PenTool className="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-              </div>
-            </div>
-            <h3 className="text-xl font-heading font-bold text-zinc-900 dark:text-white mb-3 tracking-tight uppercase">Prime Canvas</h3>
-            <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-500 leading-relaxed uppercase tracking-[0.05em]">
-              Sketch your vision. The intelligence layer will infer structure and compile your logic.
-            </p>
-            <div className="mt-12 flex items-center justify-center gap-6 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-              <span className="flex items-center gap-2"><kbd className="px-2 py-1 rounded-none bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">P</kbd> PEN</span>
-              <span className="flex items-center gap-2"><kbd className="px-2 py-1 rounded-none bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">R</kbd> RECT</span>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* Minimap - z-50 */}
+      <CanvasMinimap 
+        elements={canvasState.elements}
+        stagePos={canvasState.stagePos}
+        stageScale={canvasState.stageScale}
+        setStagePos={canvasState.setStagePos}
+        viewportSize={stageSize}
+      />
+
+      {/* Style Selector - z-40 */}
+      <CanvasStyleSelector 
+        selectedStyle={selectedStyle}
+        onSelect={onSelectStyle}
+      />
+
+      {/* Status Bar - z-40 */}
+      <CanvasStatusBar 
+        elementCount={canvasState.elements.length}
+        zoomLevel={canvasState.stageScale}
+        currentTool={canvasState.tool}
+      />
     </div>
   );
 }

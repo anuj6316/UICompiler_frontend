@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export type ElementType = 'pen' | 'rect' | 'circle' | 'text' | 'image' | 'result';
+
+export type SketchStyle = 'graphite' | 'blueprint' | 'wireframe' | 'lineart';
 
 export interface CanvasElement {
   id: string;
@@ -27,7 +29,39 @@ export interface CanvasElement {
   sourceSketchId?: string;
 }
 
-export function useCanvas() {
+const STYLE_CONFIGS: Record<SketchStyle, {
+  stroke: string;
+  darkStroke: string;
+  strokeWidth: number;
+  tension: number;
+}> = {
+  graphite: {
+    stroke: '#52525b',
+    darkStroke: '#a1a1aa',
+    strokeWidth: 2.5,
+    tension: 0.5,
+  },
+  blueprint: {
+    stroke: '#2563eb',
+    darkStroke: '#60a5fa',
+    strokeWidth: 1.5,
+    tension: 0,
+  },
+  wireframe: {
+    stroke: '#0891b2',
+    darkStroke: '#22d3ee',
+    strokeWidth: 2,
+    tension: 0,
+  },
+  lineart: {
+    stroke: '#09090b',
+    darkStroke: '#ffffff',
+    strokeWidth: 1.5,
+    tension: 0.3,
+  },
+};
+
+export function useCanvas(selectedStyle: SketchStyle = 'wireframe') {
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -50,6 +84,16 @@ export function useCanvas() {
 
   const [history, setHistory] = useState<CanvasElement[][]>([[]]);
   const [historyStep, setHistoryStep] = useState(0);
+
+  const styleConfig = useMemo(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    const config = STYLE_CONFIGS[selectedStyle] || STYLE_CONFIGS.wireframe;
+    return {
+      stroke: isDark ? config.darkStroke : config.stroke,
+      strokeWidth: config.strokeWidth,
+      tension: config.tension,
+    };
+  }, [selectedStyle]);
 
   const undo = useCallback(() => {
     if (historyStep > 0) {
@@ -130,19 +174,16 @@ export function useCanvas() {
 
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
-    // Convert to relative position within scaled/panned stage
     const x = (pos.x - stagePos.x) / stageScale;
     const y = (pos.y - stagePos.y) / stageScale;
 
     const id = Date.now().toString();
-    const isDark = document.documentElement.className.includes('dark');
-    const stroke = isDark ? '#ffffff' : '#000000';
+    const stroke = styleConfig.stroke;
+    const strokeWidth = styleConfig.strokeWidth / stageScale;
 
     if (tool === 'pen') {
       currentPointsRef.current = [x, y];
       setIsDrawing(true);
-      // We don't call setElements here anymore for pen, 
-      // we'll handle it natively in the CanvasArea via activeLineRef
       return;
     }
 
@@ -150,15 +191,15 @@ export function useCanvas() {
     setSelectedId(null);
 
     if (tool === 'rect') {
-      setElements([...elements, { id, type: 'rect', x, y, width: 0, height: 0, stroke, strokeWidth: 3 / stageScale, fill: fillColor }]);
+      setElements([...elements, { id, type: 'rect', x, y, width: 0, height: 0, stroke, strokeWidth, fill: fillColor }]);
     } else if (tool === 'circle') {
-      setElements([...elements, { id, type: 'circle', x, y, radius: 0, stroke, strokeWidth: 3 / stageScale, fill: fillColor }]);
+      setElements([...elements, { id, type: 'circle', x, y, radius: 0, stroke, strokeWidth, fill: fillColor }]);
     } else if (tool === 'text') {
       const text = prompt('Enter text:') || 'Text';
       setElements([...elements, { id, type: 'text', x, y, text, fontSize: fontSize / stageScale, fontFamily, stroke, strokeWidth: 1 }]);
       setIsDrawing(false);
     }
-  }, [tool, elements, fillColor, fontSize, fontFamily, stagePos, stageScale, isSpaceDown]);
+  }, [tool, elements, fillColor, fontSize, fontFamily, stagePos, stageScale, isSpaceDown, styleConfig]);
 
    const handleMouseMove = useCallback((e: any) => {
     if (isPanning) {
@@ -217,17 +258,16 @@ export function useCanvas() {
     
     if (!isDrawing) return;
     
-    // Finalize pen drawing in React state
     if (tool === 'pen' && currentPointsRef.current.length > 0) {
-      const isDark = document.documentElement.className.includes('dark');
-      const stroke = isDark ? '#ffffff' : '#000000';
+      const stroke = styleConfig.stroke;
+      const strokeWidth = styleConfig.strokeWidth / stageScale;
       const id = Date.now().toString();
       const newElement: CanvasElement = { 
         id, 
         type: 'pen', 
         points: currentPointsRef.current, 
         stroke, 
-        strokeWidth: 3 / stageScale 
+        strokeWidth 
       };
       
       const newElements = [...elements, newElement];
@@ -243,7 +283,7 @@ export function useCanvas() {
     }
     
     setIsDrawing(false);
-  }, [elements, history, historyStep, isPanning, tool, isSpaceDown, isDrawing]);
+  }, [elements, history, historyStep, isPanning, tool, isSpaceDown, isDrawing, styleConfig, stageScale]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -293,6 +333,44 @@ export function useCanvas() {
     setStageScale(1);
   }, []);
 
+  const loadTemplate = useCallback((templateElements: any[]) => {
+    const isDark = document.documentElement.className.includes('dark');
+    const stroke = isDark ? '#ffffff' : '#000000';
+    
+    const processedElements = templateElements.map((el, index) => {
+      let elementStroke = el.stroke;
+      let elementFill = el.fill || 'transparent';
+      
+      if (el.stroke === '#000000') {
+        elementStroke = stroke;
+      }
+      if (el.fill === '#000000') {
+        elementFill = stroke;
+      } else if (el.fill === '#ffffff') {
+        elementFill = isDark ? '#ffffff' : '#000000';
+      } else if (el.fill === '#999999') {
+        elementFill = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+      }
+      
+      return {
+        ...el,
+        id: `template-${Date.now()}-${index}`,
+        stroke: elementStroke,
+        strokeWidth: el.strokeWidth || 2,
+        fill: elementFill,
+        scaleX: 1,
+        scaleY: 1,
+        rotation: 0,
+      };
+    });
+    
+    setElements(processedElements);
+    setHistory([processedElements]);
+    setHistoryStep(0);
+    setStagePos({ x: 0, y: 0 });
+    setStageScale(1);
+  }, []);
+
   const handleWheel = useCallback((e: any) => {
     e.evt.preventDefault();
     const scaleBy = 1.05;
@@ -331,8 +409,8 @@ export function useCanvas() {
     fontFamily, setFontFamily,
     history, historyStep,
     handleMouseDown, handleMouseMove, handleMouseUp, handleWheel,
-    undo, redo, clearCanvasBase, handleImageUpload,
+    undo, redo, clearCanvasBase, handleImageUpload, loadTemplate,
     stagePos, setStagePos, stageScale, setStageScale, isSpaceDown,
-    activeLineRef
+    activeLineRef, styleConfig
   };
 }
