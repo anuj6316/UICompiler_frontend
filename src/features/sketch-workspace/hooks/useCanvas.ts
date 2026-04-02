@@ -64,6 +64,7 @@ const STYLE_CONFIGS: Record<SketchStyle, {
 export function useCanvas() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<'pen' | 'select' | 'rect' | 'circle' | 'text' | 'pan'>('pen');
   const [fillColor, setFillColor] = useState<string>('transparent');
@@ -84,6 +85,20 @@ export function useCanvas() {
 
   const [history, setHistory] = useState<CanvasElement[][]>([[]]);
   const [historyStep, setHistoryStep] = useState(0);
+  const draftElementRef = useRef<CanvasElement | null>(null);
+  const [draftElement, setDraftElement] = useState<CanvasElement | null>(null);
+  const [isDragSelecting, setIsDragSelecting] = useState(false);
+  const [dragSelectStart, setDragSelectStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragSelectEnd, setDragSelectEnd] = useState<{ x: number; y: number } | null>(null);
+
+  const pushHistory = useCallback((newElements: CanvasElement[]) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyStep + 1);
+      newHistory.push(newElements);
+      setHistoryStep(newHistory.length - 1);
+      return newHistory;
+    });
+  }, [historyStep]);
 
   // Style state - stable hook, updates trigger re-render
   const [selectedStyle, setSelectedStyleState] = useState<SketchStyle>('wireframe');
@@ -116,6 +131,23 @@ export function useCanvas() {
     }
   }, [history, historyStep]);
 
+  const addToSelection = useCallback((id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds([]);
+    setSelectedId(null);
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(elements.map(el => el.id));
+  }, [elements]);
+
+  const getSelectedElements = useCallback(() => {
+    return elements.filter(el => selectedIds.includes(el.id));
+  }, [elements, selectedIds]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
@@ -129,10 +161,18 @@ export function useCanvas() {
         if (e.shiftKey) redo();
         else undo();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        selectAll();
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedId) {
-          setElements(elements.filter(el => el.id !== selectedId));
+        const idsToDelete = selectedIds.length > 0 ? selectedIds : selectedId ? [selectedId] : [];
+        if (idsToDelete.length > 0) {
+          const newElements = elements.filter(el => !idsToDelete.includes(el.id));
+          setElements(newElements);
+          pushHistory(newElements);
           setSelectedId(null);
+          setSelectedIds([]);
         }
       }
       if (e.key === 'v') setTool('select');
@@ -157,7 +197,7 @@ export function useCanvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [historyStep, history, selectedId, elements, undo, redo]);
+  }, [historyStep, history, selectedId, elements, undo, redo, pushHistory]);
 
   const handleMouseDown = useCallback((e: any) => {
       
@@ -174,7 +214,22 @@ export function useCanvas() {
       const isTransformer = e.target.getParent()?.className === 'Transformer';
       
       if (!isShape && !isTransformer) {
-        setSelectedId(null);
+        const stage = e.target.getStage();
+        const pos = stage.getPointerPosition();
+        const x = (pos.x - stagePos.x) / stageScale;
+        const y = (pos.y - stagePos.y) / stageScale;
+        
+        if (!e.evt.shiftKey) {
+          setSelectedId(null);
+          setSelectedIds([]);
+        }
+        setDragSelectStart({ x, y });
+        setIsDragSelecting(true);
+      } else if (!e.evt.shiftKey) {
+        setSelectedId(clickedId);
+        setSelectedIds([]);
+      } else {
+        addToSelection(clickedId);
       }
       return;
     }
@@ -198,15 +253,19 @@ export function useCanvas() {
     setSelectedId(null);
 
     if (tool === 'rect') {
-      setElements([...elements, { id, type: 'rect', x, y, width: 0, height: 0, stroke, strokeWidth, fill: fillColor }]);
+      setDraftElement(null);
+      draftElementRef.current = { id, type: 'rect', x, y, width: 0, height: 0, stroke, strokeWidth, fill: fillColor };
     } else if (tool === 'circle') {
-      setElements([...elements, { id, type: 'circle', x, y, radius: 0, stroke, strokeWidth, fill: fillColor }]);
+      setDraftElement(null);
+      draftElementRef.current = { id, type: 'circle', x, y, radius: 0, stroke, strokeWidth, fill: fillColor };
     } else if (tool === 'text') {
       const text = prompt('Enter text:') || 'Text';
-      setElements([...elements, { id, type: 'text', x, y, text, fontSize: fontSize / stageScale, fontFamily, stroke, strokeWidth: 1 }]);
+      const newElements = [...elements, { id, type: 'text' as ElementType, x, y, text, fontSize: fontSize / stageScale, fontFamily, stroke, strokeWidth: 1 }];
+      setElements(newElements);
+      pushHistory(newElements);
       setIsDrawing(false);
     }
-  }, [tool, elements, fillColor, fontSize, fontFamily, stagePos, stageScale, isSpaceDown, styleConfig]);
+  }, [tool, elements, fillColor, fontSize, fontFamily, stagePos, stageScale, isSpaceDown, styleConfig, pushHistory]);
 
    const handleMouseMove = useCallback((e: any) => {
     if (isPanning) {
@@ -222,6 +281,15 @@ export function useCanvas() {
       return;
     }
 
+    if (isDragSelecting && dragSelectStart) {
+      const stage = e.target.getStage();
+      const pos = stage.getPointerPosition();
+      const x = (pos.x - stagePos.x) / stageScale;
+      const y = (pos.y - stagePos.y) / stageScale;
+      setDragSelectEnd({ x, y });
+      return;
+    }
+
     if (!isDrawing) return;
 
     if (rafRef.current) return;
@@ -232,25 +300,28 @@ export function useCanvas() {
       const x = (pos.x - stagePos.x) / stageScale;
       const y = (pos.y - stagePos.y) / stageScale;
       
-      let lastElement = { ...elements[elements.length - 1] };
-
       if (tool === 'pen') {
-        lastElement.points = lastElement.points!.concat([x, y]);
-      } else if (tool === 'rect') {
-        lastElement.width = x - lastElement.x!;
-        lastElement.height = y - lastElement.y!;
-      } else if (tool === 'circle') {
-        const dx = x - lastElement.x!;
-        const dy = y - lastElement.y!;
-        lastElement.radius = Math.sqrt(dx * dx + dy * dy);
+        currentPointsRef.current = currentPointsRef.current.concat([x, y]);
+        if (activeLineRef.current) {
+          activeLineRef.current.points(currentPointsRef.current);
+        }
+        rafRef.current = null;
+        return;
       }
 
-      const newElements = [...elements];
-      newElements[elements.length - 1] = lastElement;
-      setElements(newElements);
+      if (tool === 'rect' && draftElementRef.current) {
+        draftElementRef.current = { ...draftElementRef.current, width: x - draftElementRef.current.x!, height: y - draftElementRef.current.y! };
+        setDraftElement(draftElementRef.current);
+      } else if (tool === 'circle' && draftElementRef.current) {
+        const dx = x - draftElementRef.current.x!;
+        const dy = y - draftElementRef.current.y!;
+        draftElementRef.current = { ...draftElementRef.current, radius: Math.sqrt(dx * dx + dy * dy) };
+        setDraftElement(draftElementRef.current);
+      }
+
       rafRef.current = null;
     });
-  }, [isDrawing, elements, tool, isPanning, lastPanPos, stagePos, stageScale]);
+  }, [isDrawing, elements, tool, isPanning, lastPanPos, stagePos, stageScale, isDragSelecting, dragSelectStart]);
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
@@ -263,34 +334,57 @@ export function useCanvas() {
       return;
     }
     
-    if (!isDrawing) return;
-    
-    if (tool === 'pen' && currentPointsRef.current.length > 0) {
-      const stroke = styleConfig.stroke;
-      const strokeWidth = styleConfig.strokeWidth / stageScale;
-      const id = Date.now().toString();
-      const newElement: CanvasElement = { 
-        id, 
-        type: 'pen', 
-        points: currentPointsRef.current, 
-        stroke, 
-        strokeWidth 
-      };
+    if (isDragSelecting && dragSelectStart && dragSelectEnd) {
+      const minX = Math.min(dragSelectStart.x, dragSelectEnd.x);
+      const minY = Math.min(dragSelectStart.y, dragSelectEnd.y);
+      const maxX = Math.max(dragSelectStart.x, dragSelectEnd.x);
+      const maxY = Math.max(dragSelectStart.y, dragSelectEnd.y);
       
-      const newElements = [...elements, newElement];
-      setElements(newElements);
+      const selectedInBox = elements.filter(el => {
+        const elX = el.x || 0;
+        const elY = el.y || 0;
+        const elW = el.width || el.radius * 2 || 50;
+        const elH = el.height || el.radius * 2 || 50;
+        
+        const elCenterX = elX + elW / 2;
+        const elCenterY = elY + elH / 2;
+        
+        return elCenterX >= minX && elCenterX <= maxX && elCenterY >= minY && elCenterY <= maxY;
+      }).map(el => el.id);
       
-      const newHistory = history.slice(0, historyStep + 1);
-      newHistory.push(newElements);
-      setHistory(newHistory);
-      setHistoryStep(newHistory.length - 1);
-      
-      currentPointsRef.current = [];
-      if (activeLineRef.current) activeLineRef.current.points([]);
+      setSelectedIds(selectedInBox);
+      setIsDragSelecting(false);
+      setDragSelectStart(null);
+      setDragSelectEnd(null);
+      return;
     }
     
+    if (!isDrawing) return;
+    
+    let finalElements = elements;
+    
+    if (tool === 'pen' && currentPointsRef.current.length > 0) {
+      const newElement: CanvasElement = { 
+        id: Date.now().toString(), 
+        type: 'pen', 
+        points: currentPointsRef.current, 
+        stroke: styleConfig.stroke, 
+        strokeWidth: styleConfig.strokeWidth / stageScale 
+      };
+      finalElements = [...elements, newElement];
+      setElements(finalElements);
+      currentPointsRef.current = [];
+      if (activeLineRef.current) activeLineRef.current.points([]);
+    } else if ((tool === 'rect' || tool === 'circle') && draftElementRef.current) {
+      finalElements = [...elements, draftElementRef.current];
+      setElements(finalElements);
+      setDraftElement(null);
+      draftElementRef.current = null;
+    }
+    
+    pushHistory(finalElements);
     setIsDrawing(false);
-  }, [elements, history, historyStep, isPanning, tool, isSpaceDown, isDrawing, styleConfig, stageScale]);
+  }, [elements, history, historyStep, isPanning, tool, isSpaceDown, isDrawing, styleConfig, stageScale, pushHistory, isDragSelecting, dragSelectStart, dragSelectEnd]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -409,6 +503,7 @@ export function useCanvas() {
   return {
     elements, setElements,
     selectedId, setSelectedId,
+    selectedIds, setSelectedIds,
     isDrawing, setIsDrawing,
     tool, setTool,
     fillColor, setFillColor,
@@ -418,6 +513,8 @@ export function useCanvas() {
     handleMouseDown, handleMouseMove, handleMouseUp, handleWheel,
     undo, redo, clearCanvasBase, handleImageUpload, loadTemplate,
     stagePos, setStagePos, stageScale, setStageScale, isSpaceDown,
-    activeLineRef, styleConfig, setSelectedStyle
+    activeLineRef, styleConfig, setSelectedStyle,
+    addToSelection, clearSelection, selectAll, getSelectedElements,
+    draftElement, isDragSelecting, dragSelectStart, dragSelectEnd
   };
 }

@@ -414,6 +414,20 @@ export default function SketchToUI() {
                 generated={generated} 
                 selectedStyle={selectedSketchStyle as SketchStyle}
                 onSelectStyle={(style) => setSelectedSketchStyle(style)}
+                genState={genState}
+                onGenerateWireframe={() => {
+                  const selectedCount = canvasState.selectedIds?.length || 0;
+                  const hasSelection = selectedCount > 0 || canvasState.selectedId;
+                  const elementCount = hasSelection ? selectedCount || 1 : canvasState.elements.length;
+                  
+                  if (elementCount > 0) {
+                    handleProcessStep('wireframe');
+                    setCurrentStep('wireframe');
+                    toast.success(`Generating wireframe for ${elementCount} element${elementCount > 1 ? 's' : ''}...`);
+                  } else {
+                    toast.error('Select elements or draw something first!');
+                  }
+                }}
               />
             )}
             {currentStep !== 'sketch' && genState.generatedSchema && (

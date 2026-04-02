@@ -14,3 +14,6 @@ export { BackToSketchButton } from './BackToSketchButton';
 export { CanvasStyleSelector } from './CanvasStyleSelector';
 export { DrawingGuidance } from './DrawingGuidance';
 export { CanvasStatusBar } from './CanvasStatusBar';
+export { SelectionInfoBar } from './SelectionInfoBar';
+export { ElementProperties } from './ElementProperties';
+export { GenerateWireframeButton } from './GenerateWireframeButton';

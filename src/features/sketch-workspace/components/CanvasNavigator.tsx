@@ -51,7 +51,7 @@ export function CanvasNavigator({
   };
 
   return (
-    <div className="absolute top-24 left-6 z-50 flex flex-col pointer-events-none">
+    <div className="absolute top-6 right-6 z-50 flex flex-col pointer-events-none">
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className="mb-2 p-2 w-10 h-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-white/[0.08] shadow-lg flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 pointer-events-auto"

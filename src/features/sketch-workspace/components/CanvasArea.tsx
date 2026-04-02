@@ -12,6 +12,8 @@ import { QuickStartTemplates } from '../../../components/doodle-ui/QuickStartTem
 import { CanvasStyleSelector } from '../../../components/doodle-ui/CanvasStyleSelector';
 import { DrawingGuidance } from '../../../components/doodle-ui/DrawingGuidance';
 import { CanvasStatusBar } from '../../../components/doodle-ui/CanvasStatusBar';
+import { SelectionInfoBar } from '../../../components/doodle-ui/SelectionInfoBar';
+import { ElementProperties } from '../../../components/doodle-ui/ElementProperties';
 import { SketchStyle } from '../hooks/useCanvas';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { toast } from 'sonner';
@@ -145,9 +147,11 @@ interface CanvasAreaProps {
   generated: boolean;
   selectedStyle: SketchStyle;
   onSelectStyle: (style: SketchStyle) => void;
+  genState?: any;
+  onGenerateWireframe?: () => void;
 }
 
-export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyle }: CanvasAreaProps) {
+export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyle, genState, onGenerateWireframe }: CanvasAreaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const { isDark } = useTheme();
@@ -258,12 +262,18 @@ export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyl
               <RenderElement
                 key={el.id}
                 shape={el}
-                isSelected={el.id === canvasState.selectedId}
+                isSelected={el.id === canvasState.selectedId || canvasState.selectedIds?.includes(el.id)}
                 isSelectTool={canvasState.tool === 'select'}
                 stageScale={canvasState.stageScale}
                 tension={canvasState.styleConfig?.tension || 0.5}
-                onSelect={() => {
-                  if (canvasState.tool === 'select') canvasState.setSelectedId(el.id);
+                onSelect={(e: any) => {
+                  if (canvasState.tool === 'select') {
+                    if (e?.evt?.shiftKey) {
+                      canvasState.addToSelection(el.id);
+                    } else {
+                      canvasState.setSelectedId(el.id);
+                    }
+                  }
                 }}
                 onChange={(newAttrs: any) => {
                   const newElements = canvasState.elements.slice();
@@ -287,6 +297,37 @@ export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyl
               points={[]}
             />
           </Layer>
+          
+          {/* Draft Element Preview Layer */}
+          {canvasState.draftElement && (
+            <Layer id="draft-element-layer">
+              <RenderElement
+                shape={canvasState.draftElement}
+                isSelected={false}
+                isSelectTool={false}
+                stageScale={canvasState.stageScale}
+                tension={canvasState.styleConfig?.tension || 0.5}
+                onSelect={() => {}}
+                onChange={() => {}}
+              />
+            </Layer>
+          )}
+          
+          {/* Drag Select Rectangle Overlay */}
+          {canvasState.isDragSelecting && canvasState.dragSelectStart && canvasState.dragSelectEnd && (
+            <Layer id="drag-select-layer">
+              <Rect
+                x={Math.min(canvasState.dragSelectStart.x, canvasState.dragSelectEnd.x)}
+                y={Math.min(canvasState.dragSelectStart.y, canvasState.dragSelectEnd.y)}
+                width={Math.abs(canvasState.dragSelectEnd.x - canvasState.dragSelectStart.x)}
+                height={Math.abs(canvasState.dragSelectEnd.y - canvasState.dragSelectStart.y)}
+                stroke="#0ea5e9"
+                strokeWidth={2 / canvasState.stageScale}
+                dash={[5 / canvasState.stageScale, 5 / canvasState.stageScale]}
+                fill="rgba(14, 165, 233, 0.08)"
+              />
+            </Layer>
+          )}
         </Stage>
       )}
 
@@ -353,7 +394,7 @@ export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyl
       </AnimatePresence>
 
       {/* Floating Toolbar */}
-      <div style={{ zIndex: 30 }} className="absolute top-0 left-0 right-0">
+      <div style={{ zIndex: 30 }}>
         <FloatingToolbar
           tool={canvasState.tool} setTool={canvasState.setTool}
           selectedId={canvasState.selectedId}
@@ -378,7 +419,7 @@ export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyl
       </div>
 
       {/* Canvas Navigator */}
-      <div style={{ zIndex: 30 }} className="absolute top-0 right-0">
+      <div style={{ zIndex: 30 }}>
         <CanvasNavigator 
           elements={canvasState.elements}
           selectedId={canvasState.selectedId}
@@ -414,8 +455,59 @@ export function CanvasArea({ canvasState, generated, selectedStyle, onSelectStyl
           elementCount={canvasState.elements.length}
           zoomLevel={canvasState.stageScale}
           currentTool={canvasState.tool}
+          selectedCount={canvasState.selectedIds?.length || (canvasState.selectedId ? 1 : 0)}
         />
       </div>
+
+      {/* Selection Info Bar */}
+      <SelectionInfoBar
+        selectedCount={canvasState.selectedIds?.length || (canvasState.selectedId ? 1 : 0)}
+        selectedElement={canvasState.elements.find((el: any) => el.id === canvasState.selectedId)}
+        onDelete={() => {
+          const idsToDelete = canvasState.selectedIds.length > 0 ? canvasState.selectedIds : [canvasState.selectedId];
+          const newElements = canvasState.elements.filter((el: any) => !idsToDelete.includes(el.id));
+          canvasState.setElements(newElements);
+          canvasState.setSelectedId(null);
+          canvasState.setSelectedIds([]);
+          toast.success('Elements deleted');
+        }}
+        onDuplicate={() => {
+          const idsToDuplicate = canvasState.selectedIds.length > 0 ? canvasState.selectedIds : [canvasState.selectedId];
+          const elementsToDuplicate = canvasState.elements.filter((el: any) => idsToDuplicate.includes(el.id));
+          const newElements = [...canvasState.elements];
+          elementsToDuplicate.forEach((el: any) => {
+            newElements.push({ ...el, id: `dup-${Date.now()}-${Math.random()}`, x: (el.x || 0) + 20, y: (el.y || 0) + 20 });
+          });
+          canvasState.setElements(newElements);
+          toast.success('Elements duplicated');
+        }}
+        onBringForward={() => {}}
+        onSendBackward={() => {}}
+        onPositionChange={() => {}}
+        onGenerateWireframe={onGenerateWireframe || (() => {
+          if (canvasState.elements.length > 0) {
+            genState?.handleProcessStep?.('wireframe');
+            genState?.setCurrentStep?.('wireframe');
+            toast.success('Generating wireframe...');
+          }
+        })}
+        isGenerating={genState?.generationState === 'processing'}
+      />
+
+      {/* Element Properties Panel */}
+      <ElementProperties
+        element={canvasState.elements.find((el: any) => el.id === canvasState.selectedId)}
+        onUpdate={(updates) => {
+          if (canvasState.selectedId) {
+            const newElements = canvasState.elements.map((el: any) =>
+              el.id === canvasState.selectedId ? { ...el, ...updates } : el
+            );
+            canvasState.setElements(newElements);
+          }
+        }}
+        onClose={() => canvasState.setSelectedId(null)}
+        isOpen={!!canvasState.selectedId && canvasState.tool === 'select'}
+      />
     </div>
   );
 }

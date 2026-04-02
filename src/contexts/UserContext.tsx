@@ -44,7 +44,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const fetchUserDetails = async () => {
     try {
       const response = await api.get<any>('/auth/get_user_details/');
-      // Backend wraps the response in { msg, data }, so we unwrap it
       const data = response.data;
       setUser({
         id: data.id || '1',
@@ -57,9 +56,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         notificationsEnabled: data.notifications_enabled ?? true,
         twoFactorEnabled: data.two_factor_enabled ?? false,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch user details:', error);
-      logout();
+      const isUnauthorized = error.message?.includes('401') || error.message?.includes('Unauthorized');
+      if (isUnauthorized) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        setUser(null);
+      }
     }
   };
 

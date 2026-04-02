@@ -72,8 +72,8 @@ export function FloatingToolbar({
   };
 
   return (
-    <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-none border border-zinc-200 dark:border-white/[0.08] shadow-lg">
-      <div className="flex items-center gap-1">
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-1.5 p-1.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-none border border-zinc-200 dark:border-white/[0.08] shadow-lg">
+      <div className="flex flex-col items-center gap-1">
         <ToolButton icon={MousePointer2} active={tool === 'select'} onClick={() => setTool('select')} tooltip="Select (V)" shortcut="V" />
         <ToolButton icon={PenTool} active={tool === 'pen'} onClick={() => setTool('pen')} tooltip="Draw (P)" shortcut="P" />
         <ToolButton icon={Square} active={tool === 'rect'} onClick={() => setTool('rect')} tooltip="Rectangle (R)" shortcut="R" />
@@ -89,11 +89,11 @@ export function FloatingToolbar({
         />
       </div>
 
-      <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
+      <div className="w-6 h-px bg-zinc-200 dark:bg-[#222228] my-0.5" />
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-2">
         {(tool === 'text' || (selectedId && elements.find(el => el.id === selectedId)?.type === 'text')) && (
-          <div className="flex items-center gap-1.5 px-2 border-r border-zinc-200 dark:border-white/[0.1]">
+          <div className="flex flex-col items-center gap-1.5 py-1 border-b border-zinc-200 dark:border-white/[0.1]">
             <select 
               value={fontSize}
               onChange={(e) => {
@@ -125,7 +125,7 @@ export function FloatingToolbar({
           </div>
         )}
 
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex flex-col items-center gap-2 py-1">
           <input 
             type="color" 
             value={fillColor === 'transparent' ? '#ffffff' : fillColor}
@@ -165,12 +165,12 @@ export function FloatingToolbar({
         </div>
       </div>
 
-      <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
+      <div className="w-6 h-px bg-zinc-200 dark:bg-[#222228] my-0.5" />
 
-      <div className="flex items-center gap-1">
+      <div className="flex flex-col items-center gap-1">
         <ToolButton icon={Undo} active={false} onClick={undo} tooltip="Undo (Ctrl+Z)" shortcut="⌘Z" />
         <ToolButton icon={Redo} active={false} onClick={redo} tooltip="Redo (Ctrl+Y)" shortcut="⌘⇧Z" />
-        <div className="w-px h-4 bg-zinc-200 dark:bg-[#222228] mx-1" />
+        <div className="w-4 h-px bg-zinc-200 dark:bg-[#222228] my-0.5" />
         <ToolButton icon={Trash2} active={false} onClick={clearCanvas} tooltip="Clear Canvas" />
       </div>
     </div>

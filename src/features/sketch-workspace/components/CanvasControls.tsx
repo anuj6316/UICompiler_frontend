@@ -32,7 +32,7 @@ export function CanvasControls({
   };
 
   return (
-    <div className="absolute bottom-6 left-6 z-50 flex flex-col gap-2">
+    <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2">
       {/* Zoom Controls */}
       <div className="flex items-center bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-white/[0.08] shadow-lg p-1">
         <ControlButton icon={Minus} onClick={() => handleZoom('out')} tooltip="Zoom Out" />
