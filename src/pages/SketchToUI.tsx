@@ -46,6 +46,7 @@ import {
   BackToSketchButton,
   UI_THEMES,
 } from '../components/doodle-ui';
+import type { SketchStyle } from '../features/sketch-workspace/hooks/useCanvas';
 
 const THEMES = [
   { id: 'modern', name: 'Modern', bg: 'bg-white dark:bg-[#111113]', primary: 'bg-zinc-900 dark:bg-zinc-200', text: 'text-zinc-900 dark:text-zinc-200', secondary: 'bg-zinc-100 dark:bg-[#1e1e24]', border: 'border-zinc-200 dark:border-white/[0.1]' },
@@ -361,61 +362,66 @@ export default function SketchToUI() {
         </CommandList>
       </CommandDialog>
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="bg-white dark:bg-[#111113] border-b border-zinc-200 dark:border-white/[0.05] p-1 flex items-center justify-between shrink-0 z-20">
-          <div className="flex items-center gap-1">
-            {currentStep !== 'sketch' && (
-              <BackToSketchButton onClick={() => setCurrentStep('sketch')} />
-            )}
-            <WorkflowTab
-              step="sketch"
-              label="00: Sketch"
-              isActive={currentStep === 'sketch'}
-              icon={<PenTool className="w-3.5 h-3.5" />}
-              onClick={() => setCurrentStep('sketch')}
-            />
-            <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
-            <WorkflowTab
-              step="wireframe"
-              label="01: Wireframe"
-              isActive={currentStep === 'wireframe'}
-              icon={<Layout className="w-3.5 h-3.5" />}
-              onClick={() => setCurrentStep('wireframe')}
-            />
-            <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
-            <WorkflowTab
-              step="design_system"
-              label="02: Design System"
-              isActive={currentStep === 'design_system'}
-              icon={<Palette className="w-3.5 h-3.5" />}
-              onClick={() => setCurrentStep('design_system')}
-            />
-            <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
-            <WorkflowTab
-              step="production_code"
-              label="03: Production Code"
-              isActive={currentStep === 'production_code'}
-              icon={<Rocket className="w-3.5 h-3.5" />}
-              onClick={() => setCurrentStep('production_code')}
-            />
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          <div className="bg-white dark:bg-[#111113] border-b border-zinc-200 dark:border-white/[0.05] p-1 flex items-center justify-between shrink-0 z-20">
+            <div className="flex items-center gap-1">
+              {currentStep !== 'sketch' && (
+                <BackToSketchButton onClick={() => setCurrentStep('sketch')} />
+              )}
+              <WorkflowTab
+                step="sketch"
+                label="00: Sketch"
+                isActive={currentStep === 'sketch'}
+                icon={<PenTool className="w-3.5 h-3.5" />}
+                onClick={() => setCurrentStep('sketch')}
+              />
+              <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
+              <WorkflowTab
+                step="wireframe"
+                label="01: Wireframe"
+                isActive={currentStep === 'wireframe'}
+                icon={<Layout className="w-3.5 h-3.5" />}
+                onClick={() => setCurrentStep('wireframe')}
+              />
+              <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
+              <WorkflowTab
+                step="design_system"
+                label="02: Design System"
+                isActive={currentStep === 'design_system'}
+                icon={<Palette className="w-3.5 h-3.5" />}
+                onClick={() => setCurrentStep('design_system')}
+              />
+              <div className="w-px h-4 bg-zinc-200 dark:bg-white/10 mx-1" />
+              <WorkflowTab
+                step="production_code"
+                label="03: Production Code"
+                isActive={currentStep === 'production_code'}
+                icon={<Rocket className="w-3.5 h-3.5" />}
+                onClick={() => setCurrentStep('production_code')}
+              />
+            </div>
+            <div className="flex items-center gap-4 px-4">
+              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-white/[0.02]">
+                Agentic Loop v1.0
+              </Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-4 px-4">
-            <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-white/[0.02]">
-              Agentic Loop v1.0
-            </Badge>
-          </div>
-        </div>
 
-        <div className="relative h-full w-full overflow-hidden">
-          {currentStep === 'sketch' && (
-            <CanvasArea canvasState={canvasState} generated={generated} />
-          )}
-          {currentStep !== 'sketch' && genState.generatedSchema && (
-            <WireframeWorkbench schema={genState.generatedSchema} onSchemaChange={genState.setGeneratedSchema} />
-          )}
+          <div className="flex-1 relative overflow-hidden">
+            {currentStep === 'sketch' && (
+              <CanvasArea 
+                canvasState={canvasState} 
+                generated={generated} 
+                selectedStyle={selectedSketchStyle as SketchStyle}
+                onSelectStyle={(style) => setSelectedSketchStyle(style)}
+              />
+            )}
+            {currentStep !== 'sketch' && genState.generatedSchema && (
+              <WireframeWorkbench schema={genState.generatedSchema} onSchemaChange={genState.setGeneratedSchema} />
+            )}
+          </div>
+          <FloatingInspector genState={genState} theme={activeTheme} />
         </div>
-        <FloatingInspector genState={genState} theme={activeTheme} />
-      </div>
 
       <KeyboardShortcuts open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>

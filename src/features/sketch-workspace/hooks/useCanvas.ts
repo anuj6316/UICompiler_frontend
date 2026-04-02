@@ -61,7 +61,7 @@ const STYLE_CONFIGS: Record<SketchStyle, {
   },
 };
 
-export function useCanvas(selectedStyle: SketchStyle = 'wireframe') {
+export function useCanvas() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -84,6 +84,13 @@ export function useCanvas(selectedStyle: SketchStyle = 'wireframe') {
 
   const [history, setHistory] = useState<CanvasElement[][]>([[]]);
   const [historyStep, setHistoryStep] = useState(0);
+
+  // Style state - stable hook, updates trigger re-render
+  const [selectedStyle, setSelectedStyleState] = useState<SketchStyle>('wireframe');
+
+  const setSelectedStyle = useCallback((style: SketchStyle) => {
+    setSelectedStyleState(style);
+  }, []);
 
   const styleConfig = useMemo(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -411,6 +418,6 @@ export function useCanvas(selectedStyle: SketchStyle = 'wireframe') {
     handleMouseDown, handleMouseMove, handleMouseUp, handleWheel,
     undo, redo, clearCanvasBase, handleImageUpload, loadTemplate,
     stagePos, setStagePos, stageScale, setStageScale, isSpaceDown,
-    activeLineRef, styleConfig
+    activeLineRef, styleConfig, setSelectedStyle
   };
 }

@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   MousePointer2, PenTool, Square, Circle as CircleIcon, 
   Type, Image as ImageIcon, Undo, Redo, Trash2 
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export function ToolButton({ icon: Icon, active, onClick, tooltip }: { icon: any, active: boolean, onClick: () => void, tooltip: string }) {
+export function ToolButton({ icon: Icon, active, onClick, tooltip, shortcut }: { icon: any, active: boolean, onClick: () => void, tooltip: string, shortcut?: string }) {
   return (
     <motion.button
       whileHover={{ scale: 1.05, y: -2 }}
@@ -19,6 +19,11 @@ export function ToolButton({ icon: Icon, active, onClick, tooltip }: { icon: any
       }`}
     >
       <Icon className="w-4 h-4" />
+      {shortcut && (
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold px-1 bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity">
+          {shortcut}
+        </span>
+      )}
       {active && (
         <motion.div 
           layoutId="activeTool"
@@ -41,7 +46,7 @@ interface FloatingToolbarProps {
   setFontSize: (s: number) => void;
   fontFamily: string;
   setFontFamily: (f: string) => void;
-  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   undo: () => void;
   redo: () => void;
   clearCanvas: () => void;
@@ -50,27 +55,38 @@ interface FloatingToolbarProps {
 export function FloatingToolbar({
   tool, setTool, selectedId, elements, setElements,
   fillColor, setFillColor, fontSize, setFontSize,
-  fontFamily, setFontFamily, handleImageUpload,
+  fontFamily, setFontFamily, onImageUpload,
   undo, redo, clearCanvas
 }: FloatingToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onImageUpload(e);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-none border border-zinc-200 dark:border-white/[0.08] shadow-lg">
       <div className="flex items-center gap-1">
-        <ToolButton icon={MousePointer2} active={tool === 'select'} onClick={() => setTool('select')} tooltip="Select (V)" />
-        <ToolButton icon={PenTool} active={tool === 'pen'} onClick={() => setTool('pen')} tooltip="Draw (P)" />
-        <ToolButton icon={Square} active={tool === 'rect'} onClick={() => setTool('rect')} tooltip="Rectangle (R)" />
-        <ToolButton icon={CircleIcon} active={tool === 'circle'} onClick={() => setTool('circle')} tooltip="Circle (O)" />
-        <ToolButton icon={Type} active={tool === 'text'} onClick={() => setTool('text')} tooltip="Text (T)" />
-        <div className="relative">
-          <ToolButton icon={ImageIcon} active={false} onClick={() => document.getElementById('image-upload')?.click()} tooltip="Image (I)" />
-          <input 
-            id="image-upload"
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            onChange={handleImageUpload}
-          />
-        </div>
+        <ToolButton icon={MousePointer2} active={tool === 'select'} onClick={() => setTool('select')} tooltip="Select (V)" shortcut="V" />
+        <ToolButton icon={PenTool} active={tool === 'pen'} onClick={() => setTool('pen')} tooltip="Draw (P)" shortcut="P" />
+        <ToolButton icon={Square} active={tool === 'rect'} onClick={() => setTool('rect')} tooltip="Rectangle (R)" shortcut="R" />
+        <ToolButton icon={CircleIcon} active={tool === 'circle'} onClick={() => setTool('circle')} tooltip="Circle (O)" shortcut="O" />
+        <ToolButton icon={Type} active={tool === 'text'} onClick={() => setTool('text')} tooltip="Text (T)" shortcut="T" />
+        <ToolButton icon={ImageIcon} active={false} onClick={handleImageClick} tooltip="Upload Image (I)" shortcut="I" />
+        <input 
+          ref={fileInputRef}
+          type="file" 
+          accept="image/*" 
+          className="hidden" 
+          onChange={handleFileChange}
+        />
       </div>
 
       <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
@@ -152,8 +168,8 @@ export function FloatingToolbar({
       <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
 
       <div className="flex items-center gap-1">
-        <ToolButton icon={Undo} active={false} onClick={undo} tooltip="Undo (Ctrl+Z)" />
-        <ToolButton icon={Redo} active={false} onClick={redo} tooltip="Redo (Ctrl+Y)" />
+        <ToolButton icon={Undo} active={false} onClick={undo} tooltip="Undo (Ctrl+Z)" shortcut="⌘Z" />
+        <ToolButton icon={Redo} active={false} onClick={redo} tooltip="Redo (Ctrl+Y)" shortcut="⌘⇧Z" />
         <div className="w-px h-4 bg-zinc-200 dark:bg-[#222228] mx-1" />
         <ToolButton icon={Trash2} active={false} onClick={clearCanvas} tooltip="Clear Canvas" />
       </div>
